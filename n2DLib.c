@@ -1,9 +1,10 @@
 #include "n2DLib.h"
 #include "n2DLib_font.h"
+#include "n2DLib/n2DLib_math.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <SDL2/SDL.h>
+
+static volatile const t_key* keysArray;
 
 /*             *
  *  Buffering  *
@@ -20,7 +21,7 @@ void initBuffering()
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	
-	// This fixes the fullscreen/resize crash, see line 97
+	// This fixes the fullscreen/resize crash, see updateScreen
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 	
 	SDL_CreateWindowAndRenderer(320 * 2, 240 * 2, SDL_WINDOW_BORDERLESS, &sdlWindow, &sdlRenderer);
@@ -34,13 +35,15 @@ void initBuffering()
 	}
 	MAIN_SCREEN = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 320, 240);
 
+	// TODO : look into SDL_LockTexture on MAIN_SCREEN
 	BUFF_BASE_ADDRESS = (unsigned short*)malloc(320 * 240 * sizeof(unsigned short));
 	memset(BUFF_BASE_ADDRESS, 0, sizeof(BUFF_BASE_ADDRESS));
 	
 	baseFPS = SDL_GetTicks();
 	SDL_PumpEvents();
-	G_keys = SDL_GetKeyboardState(NULL);
+	keysArray = SDL_GetKeyboardState(NULL);
 }
+
 void toggleFullscreen()
 {
 	if(SDL_GetWindowFlags(sdlWindow) & SDL_WINDOW_MAXIMIZED)
@@ -52,7 +55,6 @@ void toggleFullscreen()
 void constrainFrameRate(int fps)
 {
 	static Uint32 secondCount = 1001, secondBase = 0, FPScount = 0, FPSdisp = 0;
-	int x, y;
 	Uint32 d = 1000 / fps;
 	Uint32 elapsed = SDL_GetTicks() - baseFPS;
 	if(elapsed < d)
@@ -89,12 +91,12 @@ void updateScreen()
 		*(unsigned int*)(pixels + di) = *(unsigned int*)(buf + di);
 	SDL_UnlockTexture(MAIN_SCREEN);
 	
-	if(G_keys[SDL_SCANCODE_F])
+	if(keysArray[SDL_SCANCODE_F])
 	{
 		if(!toggled)
 		{
 			toggled = 1;
-			toggleFullscreen(); // broken, bad SDL2 build ? 31/10/2016 : yes indeed, see line 23
+			toggleFullscreen(); // broken, bad SDL2 build ? 31/10/2016 : yes indeed, see initBuffering
 		}
 	}
 	else
@@ -108,7 +110,6 @@ void updateScreen()
 void updateKeys()
 {
 	SDL_PumpEvents();
-	G_keys = SDL_GetKeyboardState(NULL);
 }
 
 void deinitBuffering()
@@ -128,7 +129,7 @@ void deinitBuffering()
 
 Uint32 timerBase[MAX_TIMER], timerValue[MAX_TIMER];
 
-void timer_load(unsigned timer, Uint32 value) // milliseconds
+void timer_load(unsigned timer, unsigned int value) // milliseconds
 {
 	timerValue[timer] = value;
 	timerBase[timer] = SDL_GetTicks();
@@ -137,99 +138,6 @@ void timer_load(unsigned timer, Uint32 value) // milliseconds
 Uint32 timer_read(unsigned timer) // returns milliseconds
 {
 	return timerValue[timer] - min(SDL_GetTicks() - timerBase[timer], timerValue[timer]);
-}
-
-/*         *
- *  Maths  *
- *         */
-
- /*
-Example:
-2.5 * 3.5 :
-	xdec = 128
-	ydec = 128
-	xint = 2
-	yint = 3
-2.5 * 3 = 8.75 :
-	rdec = 192
-	rint = 8
-*/
- 
-Fixed fixmul(Fixed x, Fixed y)
-{
-	// x = (xint << 8)+ xdec, y = (yint << 8)+ ydec
-	Fixed xdec = x & 0xff, ydec = y & 0xff, xint = x >> 8, yint = y >> 8;
-	// Like (x * y) >> 8 ; a bit slower but without any risk of overflow (noticeable when squaring and cubing)
-	return ((xint * yint) << 8) + xint * ydec + xdec * yint + ((xdec * ydec) >> 8);
-}
- 
-Fixed fixcos(Fixed angle)
-{
-	static Fixed cosLUT[] = { 256, 255, 255, 255, 254, 254, 253, 252, 251, 249, 248, 246, 244, 243, 241, 238, 236, 234, 231, 228, 225, 222, 219, 216, 212, 209, 205, 201, 197, 193, 189, 185, 181, 176, 171, 167, 162, 157, 152, 147, 142, 136, 131, 126, 120, 115, 109, 103, 97, 92, 86, 80, 74, 68, 62, 56, 49, 43, 37, 31, 25, 18, 12, 6, 0, -6, -12, -18, -25, -31, -37, -43, -49, -56, -62, -68, -74, -80, -86, -92, -97, -103, -109, -115, -120, -126, -131, -136, -142, -147, -152, -157, -162, -167, -171, -176, -181, -185, -189, -193, -197, -201, -205, -209, -212, -216, -219, -222, -225, -228, -231, -234, -236, -238, -241, -243, -244, -246, -248, -249, -251, -252, -253, -254, -254, -255, -255, -255, -256, -255, -255, -255, -254, -254, -253, -252, -251, -249, -248, -246, -244, -243, -241, -238, -236, -234, -231, -228, -225, -222, -219, -216, -212, -209, -205, -201, -197, -193, -189, -185, -181, -176, -171, -167, -162, -157, -152, -147, -142, -136, -131, -126, -120, -115, -109, -103, -97, -92, -86, -80, -74, -68, -62, -56, -49, -43, -37, -31, -25, -18, -12, -6, 0, 6, 12, 18, 25, 31, 37, 43, 49, 56, 62, 68, 74, 80, 86, 92, 97, 103, 109, 115, 120, 126, 131, 136, 142, 147, 152, 157, 162, 167, 171, 176, 181, 185, 189, 193, 197, 201, 205, 209, 212, 216, 219, 222, 225, 228, 231, 234, 236, 238, 241, 243, 244, 246, 248, 249, 251, 252, 253, 254, 254, 255, 255, 255 };
-	return cosLUT[angle & 0xff];
-}
-
- void rotate(int x, int y, int cx, int cy, Fixed angle, Rect *out)
-{
-	x -= cx;
-	y -= cy;
-	out->x = fixtoi(fixmul(itofix(x), fixcos(angle)) + fixmul(itofix(y), fixsin(angle))) + cx;
-	out->y = fixtoi(fixmul(itofix(x), -fixsin(angle)) + fixmul(itofix(y), fixcos(angle))) + cy;
-}
-
-void getBoundingBox(int x, int y, int w, int h, int cx, int cy, Fixed angle, Rect *out)
-{
-	Rect tl, tr, bl, br;
-	rotate(x, y, cx, cy, angle, &tl);
-	rotate(x + w, y, cx, cy, angle, &tr);
-	rotate(x, y + h, cx, cy, angle, &bl);
-	rotate(x + w, y + h, cx, cy, angle, &br);
-	out->x = min(min(min(tl.x, tr.x), bl.x), br.x);
-	out->y = min(min(min(tl.y, tr.y), bl.y), br.y);
-	out->w = max(max(max(tl.x, tr.x), bl.x), br.x) - out->x;
-	out->h = max(max(max(tl.y, tr.y), bl.y), br.y) - out->y;
-}
-
- int sq(int x)
-{
-	return x * x;
-}
-
- Fixed fixsq(Fixed x)
-{
-	return fixmul(x, x);
-}
-
- int cube(int x)
-{
-	return x * x * x;
-}
-
- Fixed fixcube(Fixed x)
-{
-	return fixmul(fixmul(x, x), x);
-}
-
-// Uses Lagrange's interpolation polynomial
-// Returns the next t parameter so it can be fed back to the function the next call
-int interpolatePathFloat(int curT, float _x[], float _y[], int _t[], int nb, Rect *out)
-{
-	float factor, rx = 0., ry = 0.;
-	int i, j;
-	
-	for(i = 0; i < nb; i++)
-	{
-		factor = 1.;
-		for(j = 0; j < nb; j++)
-			if(i != j)
-				factor *= (float)(curT - _t[j]) / (_t[i] - _t[j]);
-		rx += _x[i] * factor;
-		ry += _y[i] * factor;
-	}
-	
-	out->x = (int)rx;
-	out->y = (int)ry;
-	return curT + 1;
 }
 
 /*            *
@@ -499,17 +407,18 @@ void drawPolygon(unsigned short c, int pointsNb, ...)
 	free(pointsList);
 }
 
+// TODO : do better than that
 void fillCircle(int x, int y, int radius, unsigned short c)
 {
 	int i,j;
 	for(j=-radius; j<=radius; j++)
 		for(i=-radius; i<=radius; i++)
 			if(i*i+j*j <= radius*radius)
-				setPixel(x + i, y + j, c);               
+				setPixel(x + i, y + j, c);
 }
 
 /*  /!\ for circle and ellispe, the x and y must be the center of the shape, not the top-left point   /!\  */
-
+// TODO : do better than that
 void fillEllipse(int x, int y, int w, int h, unsigned short c)
 {
 	int i,j;
@@ -693,15 +602,15 @@ int stringWidth(const char* s)
  * Miscellaneous *
  *               */
 
-const t_key *G_keys;
+int isKeyPressed(t_key _k)
+{
+	return keysArray[_k];
+}
 
 void wait_no_key_pressed(t_key k)
 {
-	while (G_keys[k])
-	{
+	while (keysArray[k])
 		SDL_PumpEvents();
-		G_keys = SDL_GetKeyboardState(NULL);
-	}
 }
 
 int get_key_pressed(t_key* report)
@@ -709,7 +618,7 @@ int get_key_pressed(t_key* report)
 	int i;
 	for(i = 0; i < SDL_NUM_SCANCODES; i++)
 	{
-		if (G_keys[i])
+		if (keysArray[i])
 		{
 			if(report != NULL) *report = i;
 			return 1;
@@ -777,7 +686,3 @@ unsigned short *loadBMP(const char *path, unsigned short transparency)
 	fclose(temp);
 	return returnValue;
 }
-
-#ifdef __cplusplus
-}
-#endif
