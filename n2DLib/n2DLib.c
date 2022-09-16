@@ -526,7 +526,7 @@ void drawChar(int *x, int *y, int margin, char ch, unsigned short fc, unsigned s
 
 void drawString(int *x, int *y, int _x, const char *str, unsigned short fc, unsigned short olc)
 {
-	int i, max = strlen(str);
+	int i, max = (int)strlen(str);
 	for(i = 0; i < max; i++)
 		drawChar(x, y, _x, str[i], fc, olc);
 }
@@ -562,7 +562,7 @@ void drawStringF(int *x, int *y, int _x, unsigned short fc, unsigned short olc, 
 	// Max nb of chars on-screen
 	
 	va_start(specialArgs, s);
-	vsprintf(str, s, specialArgs);
+	vsprintf_s(str, 1200, s, specialArgs);
 	drawString(x, y, _x, str, fc, olc);
 	va_end(specialArgs);
 }
@@ -589,7 +589,7 @@ int numberWidth(int n)
 
 int stringWidth(const char* s)
 {
-	int i, result = 0, size = strlen(s);
+	int i, result = 0, size = (int)strlen(s);
 	for(i = 0; i < size; i++)
 	{
 		if(s[i] >= 0x20)
@@ -637,9 +637,11 @@ unsigned short *loadBMP(const char *path, unsigned short transparency)
 {
 	int size, width, height, offset, i, j;
 	uint16_t *returnValue;
-	FILE *temp = fopen(path, "rb");
+	FILE* temp;
+	fopen_s(&temp, path, "rb");
 	
 	if(!temp) return NULL;
+
 	// Check if the file's 2 first char are BM (indicates bitmap)
 	if(!(fgetc(temp) == 0x42 && fgetc(temp) == 0x4d))
 	{
@@ -683,6 +685,8 @@ unsigned short *loadBMP(const char *path, unsigned short transparency)
 	for(j = height - 1; j >= 0; j--)
 		for(i = 0; i < width; i++)
 			returnValue[j * width + i + 3] = (unsigned short)((fgetc(temp) >> 3) | ((fgetc(temp) >> 2) << 5) | ((fgetc(temp) >> 3) << 11));
+	
 	fclose(temp);
+
 	return returnValue;
 }
