@@ -1,11 +1,5 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <SDL2/SDL.h>
-
 #include "n2DLib/n2DLib_types.h"
 
 // TODO : use sized types
@@ -15,6 +9,7 @@ extern "C" {
 #endif
 
 struct SDL_Texture;
+typedef struct SDL_Texture SDL_Texture;
 
 #define MAX_TIMER 2
 

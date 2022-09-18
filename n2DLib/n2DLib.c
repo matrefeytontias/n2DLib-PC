@@ -1,8 +1,12 @@
 #include "n2DLib.h"
-#include "n2DLib_font.h"
-#include "n2DLib/n2DLib_math.h"
+
+#include <stdio.h>
+#include <string.h>
 
 #include <SDL2/SDL.h>
+
+#include "n2DLib_font.h"
+#include "n2DLib/n2DLib_math.h"
 
 static volatile const t_key* keysArray;
 
