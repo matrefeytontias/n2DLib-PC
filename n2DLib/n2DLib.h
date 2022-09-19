@@ -14,47 +14,47 @@ typedef struct SDL_Texture SDL_Texture;
 #define MAX_TIMER 2
 
 void initBuffering();
-void constrainFrameRate(int);
+void constrainFrameRate(INT_TYPE);
 void displayFrameRate();
 void updateScreen();
 void updateKeys();
-int isKeyPressed(t_key _k);
+BOOL_TYPE isKeyPressed(t_key _k);
 void deinitBuffering();
-void timer_load(unsigned, unsigned int);
-unsigned timer_read(unsigned);
+void timer_load(ID_TYPE, UINT_TYPE);
+UINT_TYPE timer_read(ID_TYPE);
 void clearBufferB();
 void clearBufferW();
-void clearBuffer(unsigned short);
-unsigned short getPixelUnsafe(const unsigned short*, unsigned int, unsigned int);
-unsigned short getPixel(const unsigned short*, unsigned int, unsigned int);
-void setPixelUnsafe(unsigned int, unsigned int, unsigned short);
-void setPixel(unsigned int, unsigned int, unsigned short);
-void setPixelRGB(unsigned int, unsigned int, unsigned char, unsigned char, unsigned char);
-void drawHLine(int, int, int, unsigned short);
-void drawVLine(int, int, int, unsigned short);
-void fillRect(int, int, int, int, unsigned short);
-void drawSprite(const unsigned short*, int, int, int, unsigned short);
-void drawSpritePart(const unsigned short*, int, int, const Rect*, int, unsigned short);
-void drawSpriteScaled(const unsigned short*, const Rect*, int, unsigned short);
-void drawSpriteRotated(const unsigned short*, const Rect*, const Rect*, Fixed, int, unsigned short);
-void drawLine(int, int, int, int, unsigned short);
-void drawPolygon(unsigned short, int, ...);
-void fillCircle(int, int, int, unsigned short);
-void fillEllipse(int, int, int, int, unsigned short);
-void drawString(int*, int*, int, const char*, unsigned short, unsigned short);
-void drawDecimal(int*, int*, int, unsigned short, unsigned short);
-void drawChar(int*, int*, int, char, unsigned short, unsigned short);
-void drawStringF(int*, int*, int, unsigned short, unsigned short, const char*, ...);
-int numberWidth(int);
-int stringWidth(const char*);
+void clearBuffer(PIXEL_TYPE);
+PIXEL_TYPE rgbToPixel(unsigned char r, unsigned char g, unsigned char b);
+PIXEL_TYPE getPixelUnsafe(const PIXEL_TYPE*, UINT_TYPE, UINT_TYPE);
+PIXEL_TYPE getPixel(const PIXEL_TYPE*, UINT_TYPE, UINT_TYPE);
+void setPixelUnsafe(UINT_TYPE, UINT_TYPE, PIXEL_TYPE);
+void setPixel(UINT_TYPE, UINT_TYPE, PIXEL_TYPE);
+void drawHLine(INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
+void drawVLine(INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
+void fillRect(INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
+void drawSprite(const PIXEL_TYPE*, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
+void drawSpritePart(const PIXEL_TYPE*, INT_TYPE, INT_TYPE, const Rect*, INT_TYPE, PIXEL_TYPE);
+void drawSpriteScaled(const PIXEL_TYPE*, const Rect*, INT_TYPE, PIXEL_TYPE);
+void drawSpriteRotated(const PIXEL_TYPE*, const Rect*, const Rect*, Fixed, INT_TYPE, PIXEL_TYPE);
+void drawLine(INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
+void drawPolygon(PIXEL_TYPE, INT_TYPE, ...);
+void fillCircle(INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
+void fillEllipse(INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
+void drawString(INT_TYPE*, INT_TYPE*, INT_TYPE, const char*, PIXEL_TYPE, PIXEL_TYPE);
+void drawDecimal(INT_TYPE*, INT_TYPE*, INT_TYPE, PIXEL_TYPE, PIXEL_TYPE);
+void drawChar(INT_TYPE*, INT_TYPE*, INT_TYPE, char, PIXEL_TYPE, PIXEL_TYPE);
+void drawStringF(INT_TYPE*, INT_TYPE*, INT_TYPE, PIXEL_TYPE, PIXEL_TYPE, const char*, ...);
+UINT_TYPE numberWidth(INT_TYPE);
+UINT_TYPE stringWidth(const char*);
 void wait_no_key_pressed(t_key);
-int get_key_pressed(t_key*);
-int isKey(t_key, t_key);
+BOOL_TYPE get_key_pressed(t_key*);
+BOOL_TYPE isKey(t_key, t_key);
 
-unsigned short* loadBMP(const char*, unsigned short);
+PIXEL_TYPE* loadBMP(const char*, PIXEL_TYPE);
 
 #define BUFF_BYTES_SIZE (320*240*2)
-extern unsigned short* BUFF_BASE_ADDRESS;
+extern PIXEL_TYPE* BUFF_BASE_ADDRESS;
 extern SDL_Texture* MAIN_SCREEN;
 
 #ifdef __cplusplus

@@ -2,6 +2,26 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// For booleans
+typedef uint8_t BOOL_TYPE;
+// For counting sets of few things
+typedef uint8_t ID_TYPE;
+// For general math
+typedef int32_t INT_TYPE;
+// For general math but unsigned
+typedef uint32_t UINT_TYPE;
+
+#ifdef PIXEL_TYPE_RGB565
+// For pixel storage and usage
+typedef uint16_t PIXEL_TYPE;
+#else
+#error One of the PIXEL_TYPE_* constants has to be defined.
+#endif
+
 // Single key presses
 typedef uint8_t t_key;
 
@@ -14,9 +34,13 @@ typedef uint8_t t_key;
 // Fixed point numbers. The position of the fixed point
 // is controlled by the N2DLIB_FIXED_BITS define. If
 // undefined, defaults to 24.8 fixed point.
-typedef int32_t Fixed;
+typedef INT_TYPE Fixed;
 
 typedef struct
 {
-	int x, y, w, h;
+	INT_TYPE x, y, w, h;
 } Rect;
+
+#ifdef __cplusplus
+}
+#endif
