@@ -19,7 +19,7 @@ typedef uint32_t UINT_TYPE;
 // For pixel storage and usage
 typedef uint16_t PIXEL_TYPE;
 #else
-#error One of the PIXEL_TYPE_* constants has to be defined.
+#error Please define a pixel type for the current PIXEL_TYPE_* constant.
 #endif
 
 // Single key presses

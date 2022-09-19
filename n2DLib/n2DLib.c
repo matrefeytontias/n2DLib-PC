@@ -22,7 +22,9 @@ SDL_Texture *MAIN_SCREEN;
 Uint32 baseFPS;
 
 #ifdef PIXEL_TYPE_RGB565
-#define BACKEND_PIXEL_TYPE SDL_PIXELFORMAT_RGB565
+#define BACKEND_PIXEL_FORMAT SDL_PIXELFORMAT_RGB565
+#else
+#error Please define a backend pixel format for the current PIXEL_TYPE_* constant.
 #endif
 
 void initBuffering()
@@ -41,7 +43,7 @@ void initBuffering()
 		SDL_Quit();
 		exit(1);
 	}
-	MAIN_SCREEN = SDL_CreateTexture(sdlRenderer, BACKEND_PIXEL_TYPE, SDL_TEXTUREACCESS_STREAMING, 320, 240);
+	MAIN_SCREEN = SDL_CreateTexture(sdlRenderer, BACKEND_PIXEL_FORMAT, SDL_TEXTUREACCESS_STREAMING, 320, 240);
 
 	// TODO : look into SDL_LockTexture on MAIN_SCREEN
 	BUFF_BASE_ADDRESS = (PIXEL_TYPE*)malloc(320 * 240 * sizeof(PIXEL_TYPE));
@@ -178,7 +180,7 @@ PIXEL_TYPE rgbToPixel(unsigned char r, unsigned char g, unsigned char b)
 #ifdef PIXEL_TYPE_RGB565
 	return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 #else
-#error Please define a function body for rgbToPixel for every PIXEL_TYPE_* constant.
+#error Please define a function body for rgbToPixel for the current PIXEL_TYPE_* constant.
 #endif
 }
 
