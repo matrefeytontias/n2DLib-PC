@@ -103,6 +103,11 @@ Fixed fixcube(Fixed x)
 	return fixmul(fixmul(x, x), x);
 }
 
+Fixed fixlerp(Fixed a, Fixed b, Fixed x)
+{
+	return a + fixmul(b - a, x);
+}
+
 void rotate(int x, int y, int cx, int cy, Fixed angle, Rect* out)
 {
 	x -= cx;
@@ -122,26 +127,4 @@ void getBoundingBox(int x, int y, int w, int h, int cx, int cy, Fixed angle, Rec
 	out->y = min(min(min(tl.y, tr.y), bl.y), br.y);
 	out->w = max(max(max(tl.x, tr.x), bl.x), br.x) - out->x;
 	out->h = max(max(max(tl.y, tr.y), bl.y), br.y) - out->y;
-}
-
-// Uses Lagrange's interpolation polynomial
-// Returns the next t parameter so it can be fed back to the function the next call
-int interpolatePathFloat(int curT, float _x[], float _y[], int _t[], int nb, Rect* out)
-{
-	float factor, rx = 0., ry = 0.;
-	int i, j;
-
-	for (i = 0; i < nb; i++)
-	{
-		factor = 1.;
-		for (j = 0; j < nb; j++)
-			if (i != j)
-				factor *= (float)(curT - _t[j]) / (_t[i] - _t[j]);
-		rx += _x[i] * factor;
-		ry += _y[i] * factor;
-	}
-
-	out->x = (int)rx;
-	out->y = (int)ry;
-	return curT + 1;
 }
