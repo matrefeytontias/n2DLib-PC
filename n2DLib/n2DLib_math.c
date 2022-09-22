@@ -35,6 +35,39 @@ int cube(int x)
 	return x * x * x;
 }
 
+// Adapted from https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Binary_numeral_system_(base_2)
+// with ideas from https://graphics.stanford.edu/~seander/bithacks.html
+unsigned int isqrt(unsigned int x)
+{
+	uint32_t c = 0;
+
+	// Find the highest power of 4 smaller than x.
+	// First, the smallest power of 2 bigger than x.
+	uint32_t d = x - 1;
+	d |= d >> 1;
+	d |= d >> 2;
+	d |= d >> 4;
+	d |= d >> 8;
+	d |= d >> 16;
+	d++;
+	// If it is a power of 4, divide by 4, otherwise by 2.
+	d >>= 1 + ((d & 0xAAAAAAAA) == 0);
+
+	while (d != 0)
+	{
+		if (x >= c + d)
+		{
+			x -= c + d;
+			c = (c >> 1) + d;
+		}
+		else
+			c >>= 1;
+		d >>= 2;
+	}
+
+	return c;
+}
+
 Fixed fixmul(Fixed x, Fixed y)
 {
 	// x = (xint << N2DLIB_FIXED_BITS) + xdec, y = (yint << N2DLIB_FIXED_BITS) + ydec

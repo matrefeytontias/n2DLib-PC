@@ -20,6 +20,7 @@ int clamp(int x, int a, int b);
 int sign(int x);
 int sq(int x);
 int cube(int x);
+unsigned int isqrt(unsigned int x);
 
 Fixed fixmul(Fixed x, Fixed y);
 Fixed fixdiv(Fixed x, Fixed y);
