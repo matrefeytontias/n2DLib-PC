@@ -2,12 +2,12 @@
 
 #if !defined(min) && !defined(max)
 
-int min(int a, int b)
+INT_TYPE min(INT_TYPE a, INT_TYPE b)
 {
 	return a < b ? a : b;
 }
 
-int max(int a, int b)
+INT_TYPE max(INT_TYPE a, INT_TYPE b)
 {
 	return a > b ? a : b;
 }
@@ -15,29 +15,29 @@ int max(int a, int b)
 #undef IMPL_MIN_MAX
 #endif
 
-int clamp(int x, int a, int b)
+INT_TYPE clamp(INT_TYPE x, INT_TYPE a, INT_TYPE b)
 {
 	return min(max(x, a), b);
 }
 
-int sign(int x)
+INT_TYPE sign(INT_TYPE x)
 {
-	return x < 0;
+	return (x > 0) - (x < 0);
 }
 
-int sq(int x)
+INT_TYPE sq(INT_TYPE x)
 {
 	return x * x;
 }
 
-int cube(int x)
+INT_TYPE cube(INT_TYPE x)
 {
 	return x * x * x;
 }
 
 // Adapted from https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Binary_numeral_system_(base_2)
 // with ideas from https://graphics.stanford.edu/~seander/bithacks.html
-unsigned int isqrt(unsigned int x)
+UINT_TYPE isqrt(UINT_TYPE x)
 {
 	uint32_t c = 0;
 
@@ -49,6 +49,7 @@ unsigned int isqrt(unsigned int x)
 	d |= d >> 4;
 	d |= d >> 8;
 	d |= d >> 16;
+
 	d++;
 	// If it is a power of 4, divide by 4, otherwise by 2.
 	d >>= 1 + ((d & 0xAAAAAAAA) == 0);
@@ -108,7 +109,7 @@ Fixed fixlerp(Fixed a, Fixed b, Fixed x)
 	return a + fixmul(b - a, x);
 }
 
-void rotate(int x, int y, int cx, int cy, Fixed angle, Rect* out)
+void rotate(INT_TYPE x, INT_TYPE y, INT_TYPE cx, INT_TYPE cy, Fixed angle, Rect* out)
 {
 	x -= cx;
 	y -= cy;
@@ -116,7 +117,7 @@ void rotate(int x, int y, int cx, int cy, Fixed angle, Rect* out)
 	out->y = fixtoi(fixmul(itofix(x), -fixsin(angle)) + fixmul(itofix(y), fixcos(angle))) + cy;
 }
 
-void getBoundingBox(int x, int y, int w, int h, int cx, int cy, Fixed angle, Rect* out)
+void getBoundingBox(INT_TYPE x, INT_TYPE y, INT_TYPE w, INT_TYPE h, INT_TYPE cx, INT_TYPE cy, Fixed angle, Rect* out)
 {
 	Rect tl, tr, bl, br;
 	rotate(x, y, cx, cy, angle, &tl);

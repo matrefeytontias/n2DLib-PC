@@ -27,11 +27,11 @@ Uint32 baseFPS;
 #error Please define a backend pixel format for the current PIXEL_TYPE_* constant.
 #endif
 
-void initBuffering()
+void n2D_init()
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	
-	// This fixes the fullscreen/resize crash, see updateScreen
+	// This fixes the fullscreen/resize crash, see n2D_updateScreen
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 	
 	SDL_CreateWindowAndRenderer(320 * 2, 240 * 2, SDL_WINDOW_BORDERLESS, &sdlWindow, &sdlRenderer);
@@ -53,6 +53,15 @@ void initBuffering()
 	keysArray = SDL_GetKeyboardState(NULL);
 }
 
+void n2D_deinit()
+{
+	SDL_DestroyTexture(MAIN_SCREEN);
+	SDL_DestroyRenderer(sdlRenderer);
+	SDL_DestroyWindow(sdlWindow);
+	SDL_Quit();
+	free(BUFF_BASE_ADDRESS);
+}
+
 void toggleFullscreen()
 {
 	if(SDL_GetWindowFlags(sdlWindow) & SDL_WINDOW_MAXIMIZED)
@@ -61,7 +70,7 @@ void toggleFullscreen()
 		SDL_MaximizeWindow(sdlWindow);
 }
 
-void constrainFrameRate(INT_TYPE fps)
+void n2D_constrainFrameRate(INT_TYPE fps)
 {
 	static Uint32 secondCount = 1001, secondBase = 0, FPScount = 0, FPSdisp = 0;
 	Uint32 d = 1000 / fps;
@@ -71,7 +80,7 @@ void constrainFrameRate(INT_TYPE fps)
 	baseFPS = SDL_GetTicks();
 }
 
-void displayFrameRate()
+void n2D_displayFrameRate()
 {
 	static Uint32 secondCount = 1001, secondBase = 0, FPScount = 0, FPSdisp = 0;
 	FPScount++;
@@ -85,10 +94,10 @@ void displayFrameRate()
 		secondBase = SDL_GetTicks();
 	}
 	x = 150, y = 230;
-	drawDecimal(&x, &y, FPSdisp, 0xffff, 0);
+	n2D_drawDecimal(&x, &y, FPSdisp, 0xffff, 0);
 }
 
-void updateScreen()
+void n2D_updateScreen()
 {
 	static BOOL_TYPE toggled = 0;
 	UINT_TYPE di;
@@ -105,7 +114,7 @@ void updateScreen()
 		if(!toggled)
 		{
 			toggled = 1;
-			toggleFullscreen(); // broken, bad SDL2 build ? 31/10/2016 : yes indeed, see initBuffering
+			toggleFullscreen(); // broken, bad SDL2 build ? 31/10/2016 : yes indeed, see n2D_init
 		}
 	}
 	else
@@ -113,21 +122,12 @@ void updateScreen()
 	
 	SDL_RenderCopy(sdlRenderer, MAIN_SCREEN, NULL, NULL);
 	SDL_RenderPresent(sdlRenderer);
-	updateKeys();
+	n2D_updateKeys();
 }
 
-void updateKeys()
+void n2D_updateKeys()
 {
 	SDL_PumpEvents();
-}
-
-void deinitBuffering()
-{
-	SDL_DestroyTexture(MAIN_SCREEN);
-	SDL_DestroyRenderer(sdlRenderer);
-	SDL_DestroyWindow(sdlWindow);
-	SDL_Quit();
-	free(BUFF_BASE_ADDRESS);
 }
 
 /*        *
@@ -138,13 +138,13 @@ void deinitBuffering()
 
 Uint32 timerBase[MAX_TIMER], timerValue[MAX_TIMER];
 
-void timer_load(ID_TYPE timer, UINT_TYPE value) // milliseconds
+void n2D_timerLoad(ID_TYPE timer, UINT_TYPE value) // milliseconds
 {
 	timerValue[timer] = value;
 	timerBase[timer] = SDL_GetTicks();
 }
 
-Uint32 timer_read(ID_TYPE timer) // returns milliseconds
+Uint32 n2D_timerRead(ID_TYPE timer) // returns milliseconds
 {
 	return timerValue[timer] - min(SDL_GetTicks() - timerBase[timer], timerValue[timer]);
 }
@@ -153,21 +153,21 @@ Uint32 timer_read(ID_TYPE timer) // returns milliseconds
  *  Graphics  *
  *            */
 
-void clearBufferB()
+void n2D_clearBufferB()
 {
 	INT_TYPE i;
 	for(i = 0; i < 160 * 240; i++)
 		((UINT_TYPE*)BUFF_BASE_ADDRESS)[i] = 0;
 }
 
-void clearBufferW()
+void n2D_clearBufferW()
 {
 	INT_TYPE i;
 	for(i = 0; i < 160 * 240; i++)
 		((UINT_TYPE*)BUFF_BASE_ADDRESS)[i] = 0xffffffff;
 }
 
-void clearBuffer(PIXEL_TYPE c)
+void n2D_clearBuffer(PIXEL_TYPE c)
 {
 	INT_TYPE i;
 	UINT_TYPE ci = (c << 16) | c;
@@ -175,21 +175,21 @@ void clearBuffer(PIXEL_TYPE c)
 		*((UINT_TYPE*)BUFF_BASE_ADDRESS + i) = ci;
 }
 
-PIXEL_TYPE rgbToPixel(unsigned char r, unsigned char g, unsigned char b)
+PIXEL_TYPE n2D_rgbToPixel(uint8_t r, uint8_t g, uint8_t b)
 {
 #ifdef PIXEL_TYPE_RGB565
 	return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 #else
-#error Please define a function body for rgbToPixel for the current PIXEL_TYPE_* constant.
+#error Please define a function body for n2D_rgbToPixel for the current PIXEL_TYPE_* constant.
 #endif
 }
 
-PIXEL_TYPE getPixelUnsafe(const PIXEL_TYPE *src, UINT_TYPE x, UINT_TYPE y)
+PIXEL_TYPE n2D_getPixelUnsafe(const PIXEL_TYPE *src, UINT_TYPE x, UINT_TYPE y)
 {
 	return src[x + y * src[0] + 3];
 }
 
-PIXEL_TYPE getPixel(const PIXEL_TYPE *src, UINT_TYPE x, UINT_TYPE y)
+PIXEL_TYPE n2D_getPixel(const PIXEL_TYPE *src, UINT_TYPE x, UINT_TYPE y)
 {
 	if(x < src[0] && y < src[1])
 		return src[x + y * src[0] + 3];
@@ -197,18 +197,18 @@ PIXEL_TYPE getPixel(const PIXEL_TYPE *src, UINT_TYPE x, UINT_TYPE y)
 		return src[2];
 }
 
-void setPixelUnsafe(UINT_TYPE x, UINT_TYPE y, PIXEL_TYPE c)
+void n2D_setPixelUnsafe(UINT_TYPE x, UINT_TYPE y, PIXEL_TYPE c)
 {
 	*((PIXEL_TYPE*)BUFF_BASE_ADDRESS + x + y * 320) = c;
 }
 
-void setPixel(UINT_TYPE x, UINT_TYPE y, PIXEL_TYPE c)
+void n2D_setPixel(UINT_TYPE x, UINT_TYPE y, PIXEL_TYPE c)
 {
 	if(x < 320 && y < 240)
 		*((PIXEL_TYPE*)BUFF_BASE_ADDRESS + x + y * 320) = c;
 }
 
-void drawHLine(INT_TYPE y, INT_TYPE x1, INT_TYPE x2, PIXEL_TYPE c)
+void n2D_drawHLine(INT_TYPE y, INT_TYPE x1, INT_TYPE x2, PIXEL_TYPE c)
 {
 	UINT_TYPE _x1, _x2;
 	if((x1 & x2) < 0 || x1 + x2 >= 640 || (UINT_TYPE)y > 239)
@@ -227,10 +227,10 @@ void drawHLine(INT_TYPE y, INT_TYPE x1, INT_TYPE x2, PIXEL_TYPE c)
 		_x2 = min(x1, 319);
 	}
 	for(; _x1 <= _x2; _x1++)
-		setPixelUnsafe(_x1, y, c);
+		n2D_setPixelUnsafe(_x1, y, c);
 }
 
-void drawVLine(INT_TYPE x, INT_TYPE y1, INT_TYPE y2, PIXEL_TYPE c)
+void n2D_drawVLine(INT_TYPE x, INT_TYPE y1, INT_TYPE y2, PIXEL_TYPE c)
 {
 	UINT_TYPE _y1, _y2;
 	if((y1 & y2) < 0 || y1 + y2 >= 480 || (UINT_TYPE)x > 319)
@@ -249,21 +249,21 @@ void drawVLine(INT_TYPE x, INT_TYPE y1, INT_TYPE y2, PIXEL_TYPE c)
 		_y2 = min(y1, 239);
 	}
 	for(; _y1 <= _y2; _y1++)
-		setPixelUnsafe(x, _y1, c);
+		n2D_setPixelUnsafe(x, _y1, c);
 }
 
-void fillRect(INT_TYPE x, INT_TYPE y, INT_TYPE w, INT_TYPE h, PIXEL_TYPE c)
+void n2D_fillRect(INT_TYPE x, INT_TYPE y, INT_TYPE w, INT_TYPE h, PIXEL_TYPE c)
 {
 	UINT_TYPE _x = max(x, 0), _y = max(y, 0), _w = min(320 - _x, w - _x + x), _h = min(240 - _y, h - _y + y), i, j;
 	if(_x < 320 && _y < 240)
 	{
 		for(j = _y; j < _y + _h; j++)
 			for(i = _x; i < _x + _w; i++)
-				setPixelUnsafe(i, j, c);
+				n2D_setPixelUnsafe(i, j, c);
 	}
 }
 
-void drawSprite(const PIXEL_TYPE *src, INT_TYPE _x, INT_TYPE _y, INT_TYPE flash, PIXEL_TYPE flashColor)
+void n2D_drawSprite(const PIXEL_TYPE *src, INT_TYPE _x, INT_TYPE _y, BOOL_TYPE flash, PIXEL_TYPE flashColor)
 {
 	INT_TYPE x, y, w = src[0] + _x, h = src[1] + _y, c = 3;
 	for(y = _y; y < h; y++)
@@ -271,13 +271,13 @@ void drawSprite(const PIXEL_TYPE *src, INT_TYPE _x, INT_TYPE _y, INT_TYPE flash,
 		for(x = _x; x < w; x++, c++)
 		{
 			if(src[c] != src[2])
-				setPixel(x, y, flash ? flashColor : src[c]);
+				n2D_setPixel(x, y, flash ? flashColor : src[c]);
 		}
 		if(y > 239) break;
 	}
 }
 
-void drawSpritePart(const PIXEL_TYPE *src, INT_TYPE _x, INT_TYPE _y, const Rect* part, INT_TYPE flash, PIXEL_TYPE flashColor)
+void n2D_drawSpritePart(const PIXEL_TYPE *src, INT_TYPE _x, INT_TYPE _y, const Rect* part, BOOL_TYPE flash, PIXEL_TYPE flashColor)
 {
 	PIXEL_TYPE c;
 	INT_TYPE x, y, w = part->w + _x, h = part->h + _y, z = part->x, t = part->y;
@@ -285,16 +285,16 @@ void drawSpritePart(const PIXEL_TYPE *src, INT_TYPE _x, INT_TYPE _y, const Rect*
 	{
 		for(x = _x, z = part->x; x < w; x++, z++)
 		{
-			c = getPixel(src, z, t);
+			c = n2D_getPixel(src, z, t);
 			if(c != src[2])
-				setPixel(x, y, flash ? flashColor : c);
+				n2D_setPixel(x, y, flash ? flashColor : c);
 			if(x > 319) break;
 		}
 		if(y > 239) break;
 	}
 }
 
-void drawSpriteScaled(const PIXEL_TYPE* source, const Rect* info, INT_TYPE flash, PIXEL_TYPE flashColor)
+void n2D_drawSpriteScaled(const PIXEL_TYPE* source, const Rect* info, BOOL_TYPE flash, PIXEL_TYPE flashColor)
 {
 	Fixed dx = itofix(source[0]) / info->w;
 	Fixed dy = itofix(source[1]) / info->h;
@@ -306,16 +306,16 @@ void drawSpriteScaled(const PIXEL_TYPE* source, const Rect* info, INT_TYPE flash
 	{
 		for(x = info->x - info->w / 2, tx = 0; x < _x; x++, tx += dx)
 		{
-			c = getPixel(source, fixtoi(tx), fixtoi(ty));
+			c = n2D_getPixel(source, fixtoi(tx), fixtoi(ty));
 			if(c != source[2])
-				setPixel(x, y, flash ? flashColor : c);
+				n2D_setPixel(x, y, flash ? flashColor : c);
 			if(x > 319) break;
 		}
 		if(y > 239) break;
 	}
 }
 
-void drawSpriteRotated(const PIXEL_TYPE* source, const Rect* sr, const Rect* rc, Fixed angle, INT_TYPE flash, PIXEL_TYPE flashColor)
+void n2D_drawSpriteRotated(const PIXEL_TYPE* source, const Rect* sr, const Rect* rc, Fixed angle, BOOL_TYPE flash, PIXEL_TYPE flashColor)
 {
 	Rect defaultRect = { source[0] / 2, source[1] / 2, 0, 0 };
 	Rect fr;
@@ -345,10 +345,10 @@ void drawSpriteRotated(const PIXEL_TYPE* source, const Rect* sr, const Rect* rc,
 		{
 			if(cp.x >= 0 && cp.x < 320 && cp.y >= 0 && cp.y < 240)
 			{
-				currentPixel = getPixel(source, fixtoi(cdrp.x) + rc->x, fixtoi(cdrp.y) + rc->y);
+				currentPixel = n2D_getPixel(source, fixtoi(cdrp.x) + rc->x, fixtoi(cdrp.y) + rc->y);
 				if(currentPixel != source[2])
 				{
-					setPixelUnsafe(cp.x, cp.y, flash ? flashColor : currentPixel);
+					n2D_setPixelUnsafe(cp.x, cp.y, flash ? flashColor : currentPixel);
 				}
 			}
 			cdrp.x += dX;
@@ -364,7 +364,7 @@ void drawSpriteRotated(const PIXEL_TYPE* source, const Rect* sr, const Rect* rc,
  *  Geometry  *
  *            */
  
-void drawLine(INT_TYPE x1, INT_TYPE y1, INT_TYPE x2, INT_TYPE y2, PIXEL_TYPE c)
+void n2D_drawLine(INT_TYPE x1, INT_TYPE y1, INT_TYPE x2, INT_TYPE y2, PIXEL_TYPE c)
 {
 	INT_TYPE dx = abs(x2 - x1);
 	INT_TYPE dy = abs(y2 - y1);
@@ -375,7 +375,7 @@ void drawLine(INT_TYPE x1, INT_TYPE y1, INT_TYPE x2, INT_TYPE y2, PIXEL_TYPE c)
 
 	while (!(x1 == x2 && y1 == y2))
 	{
-		setPixel(x1, y1, c);
+		n2D_setPixel(x1, y1, c);
 		e2 = 2 * err;
 		if (e2 > -dy)
 		{		 
@@ -390,8 +390,8 @@ void drawLine(INT_TYPE x1, INT_TYPE y1, INT_TYPE x2, INT_TYPE y2, PIXEL_TYPE c)
 	}
 }
 
-void drawPolygon(PIXEL_TYPE c, INT_TYPE pointsNb, ...)
-// color, <number of points you want (4 for a square, for instance, not 8 because of x and y...)>, <x1,y1,x2,y2...>
+// TODO : get rid of malloc/free
+void n2D_drawPolygon(PIXEL_TYPE c, INT_TYPE pointsNb, ...)
 {
 	// the number of arguments in the <...> must be even
 	INT_TYPE i;
@@ -412,32 +412,31 @@ void drawPolygon(PIXEL_TYPE c, INT_TYPE pointsNb, ...)
 	
 	for (i = 0; i < pointsNb * 2 - 2; i += 2)
 	{
-		drawLine(*(pointsList + i), *(pointsList + i + 1), *(pointsList + i + 2), *(pointsList + i + 3), c);
+		n2D_drawLine(*(pointsList + i), *(pointsList + i + 1), *(pointsList + i + 2), *(pointsList + i + 3), c);
 	}
-	drawLine(*(pointsList + pointsNb * 2 - 2), *(pointsList + pointsNb * 2 - 1), *(pointsList), *(pointsList + 1), c);
+	n2D_drawLine(*(pointsList + pointsNb * 2 - 2), *(pointsList + pointsNb * 2 - 1), *(pointsList), *(pointsList + 1), c);
 	va_end(ap);
 	free(pointsList);
 }
 
 // TODO : do better than that
-void fillCircle(INT_TYPE x, INT_TYPE y, INT_TYPE radius, PIXEL_TYPE c)
+void n2D_fillCircle(INT_TYPE x, INT_TYPE y, INT_TYPE radius, PIXEL_TYPE c)
 {
 	INT_TYPE i,j;
 	for(j=-radius; j<=radius; j++)
 		for(i=-radius; i<=radius; i++)
 			if(i*i+j*j <= radius*radius)
-				setPixel(x + i, y + j, c);
+				n2D_setPixel(x + i, y + j, c);
 }
 
-/*  /!\ for circle and ellispe, the x and y must be the center of the shape, not the top-left point   /!\  */
 // TODO : do better than that
-void fillEllipse(INT_TYPE x, INT_TYPE y, INT_TYPE w, INT_TYPE h, PIXEL_TYPE c)
+void n2D_fillEllipse(INT_TYPE x, INT_TYPE y, INT_TYPE w, INT_TYPE h, PIXEL_TYPE c)
 {
 	INT_TYPE i,j;
 	for(j=-h; j<=h; j++)
 		for(i=-w; i<=w; i++)
 			if(i*i*h*h+j*j*w*w <= h*h*w*w)
-				setPixel(x + i, y + j, c);
+				n2D_setPixel(x + i, y + j, c);
 }
 
 /*        *
@@ -509,7 +508,7 @@ INT_TYPE isOutlinePixel(unsigned char* charfont, INT_TYPE x, INT_TYPE y)
 	}
 }
 
-void drawChar(INT_TYPE *x, INT_TYPE *y, INT_TYPE margin, char ch, PIXEL_TYPE fc, PIXEL_TYPE olc)
+void n2D_drawChar(INT_TYPE *x, INT_TYPE *y, INT_TYPE margin, char ch, PIXEL_TYPE fc, PIXEL_TYPE olc)
 {
 	INT_TYPE i, j;
 	unsigned char *charSprite;
@@ -527,23 +526,23 @@ void drawChar(INT_TYPE *x, INT_TYPE *y, INT_TYPE margin, char ch, PIXEL_TYPE fc,
 			for(j = 7; j >= 0; j--)
 			{
 				if((charSprite[i] >> j) & 1)
-					setPixel(*x + (7 - j), *y + i, fc);
+					n2D_setPixel(*x + (7 - j), *y + i, fc);
 				else if(isOutlinePixel(charSprite, 7 - j, i))
-					setPixel(*x + (7 - j), *y + i, olc);
+					n2D_setPixel(*x + (7 - j), *y + i, olc);
 			}
 		}
 		*x += 8;
 	}
 }
 
-void drawString(INT_TYPE *x, INT_TYPE *y, INT_TYPE _x, const char *str, PIXEL_TYPE fc, PIXEL_TYPE olc)
+void n2D_drawString(INT_TYPE *x, INT_TYPE *y, INT_TYPE _x, const char *str, PIXEL_TYPE fc, PIXEL_TYPE olc)
 {
 	INT_TYPE i, max = (INT_TYPE)strlen(str);
 	for(i = 0; i < max; i++)
-		drawChar(x, y, _x, str[i], fc, olc);
+		n2D_drawChar(x, y, _x, str[i], fc, olc);
 }
 
-void drawDecimal(INT_TYPE *x, INT_TYPE *y, INT_TYPE n, PIXEL_TYPE fc, PIXEL_TYPE olc)
+void n2D_drawDecimal(INT_TYPE *x, INT_TYPE *y, INT_TYPE n, PIXEL_TYPE fc, PIXEL_TYPE olc)
 {
 	// Ints are in [-2147483648, 2147483647]
 	//               |        |
@@ -551,7 +550,7 @@ void drawDecimal(INT_TYPE *x, INT_TYPE *y, INT_TYPE n, PIXEL_TYPE fc, PIXEL_TYPE
 	
 	if(n < 0)
 	{
-		drawChar(x, y, 0, '-', fc, olc);
+		n2D_drawChar(x, y, 0, '-', fc, olc);
 		n = -n;
 	}
 	while(divisor != 0)
@@ -560,14 +559,14 @@ void drawDecimal(INT_TYPE *x, INT_TYPE *y, INT_TYPE n, PIXEL_TYPE fc, PIXEL_TYPE
 		if(divisor == 1 || num != 0 || numHasStarted)
 		{
 			numHasStarted = 1;
-			drawChar(x, y, 0, num + '0', fc, olc);
+			n2D_drawChar(x, y, 0, num + '0', fc, olc);
 		}
 		n %= divisor;
 		divisor /= 10;
 	}
 }
 
-void drawStringF(INT_TYPE *x, INT_TYPE *y, INT_TYPE _x, PIXEL_TYPE fc, PIXEL_TYPE olc, const char *s, ...)
+void n2D_drawStringF(INT_TYPE *x, INT_TYPE *y, INT_TYPE _x, PIXEL_TYPE fc, PIXEL_TYPE olc, const char *s, ...)
 {
 	va_list specialArgs;
 	char str[1200] = { 0 };
@@ -575,11 +574,11 @@ void drawStringF(INT_TYPE *x, INT_TYPE *y, INT_TYPE _x, PIXEL_TYPE fc, PIXEL_TYP
 	
 	va_start(specialArgs, s);
 	vsprintf_s(str, 1200, s, specialArgs);
-	drawString(x, y, _x, str, fc, olc);
+	n2D_drawString(x, y, _x, str, fc, olc);
 	va_end(specialArgs);
 }
 
-UINT_TYPE numberWidth(INT_TYPE n)
+UINT_TYPE n2D_numberWidth(INT_TYPE n)
 {
 	// Ints are in [-2147483648, 2147483647]
 	UINT_TYPE divisor = 10, result = 8, number = n;
@@ -599,7 +598,7 @@ UINT_TYPE numberWidth(INT_TYPE n)
 	}
 }
 
-UINT_TYPE stringWidth(const char* s)
+UINT_TYPE n2D_stringWidth(const char* s)
 {
 	UINT_TYPE i, result = 0, size = (UINT_TYPE)strlen(s);
 	for(i = 0; i < size; i++)
@@ -614,18 +613,18 @@ UINT_TYPE stringWidth(const char* s)
  * Miscellaneous *
  *               */
 
-BOOL_TYPE isKeyPressed(t_key _k)
+BOOL_TYPE n2D_isKeyPressed(t_key _k)
 {
 	return keysArray[_k];
 }
 
-void wait_no_key_pressed(t_key k)
+void n2D_waitNoKeyPressed(t_key k)
 {
 	while (keysArray[k])
 		SDL_PumpEvents();
 }
 
-BOOL_TYPE get_key_pressed(t_key* report)
+BOOL_TYPE n2D_getKeyPressed(t_key* report)
 {
 	INT_TYPE i;
 	for(i = 0; i < SDL_NUM_SCANCODES; i++)
@@ -639,13 +638,12 @@ BOOL_TYPE get_key_pressed(t_key* report)
 	return 0;
 }
 
-BOOL_TYPE isKey(t_key k1, t_key k2)
+BOOL_TYPE n2D_areKeysSame(t_key k1, t_key k2)
 {
 	return k1 == k2;
 }
 
-// Loads a 24-bits bitmap image into an n2DLib-compatible PIXEL_TYPE* array
-PIXEL_TYPE *loadBMP(const char *path, PIXEL_TYPE transparency)
+PIXEL_TYPE *n2D_loadBMP(const char *path, PIXEL_TYPE transparency)
 {
 	INT_TYPE size, width, height, offset, i, j;
 	uint16_t *returnValue;
@@ -694,9 +692,14 @@ PIXEL_TYPE *loadBMP(const char *path, PIXEL_TYPE transparency)
 	returnValue[0] = width;
 	returnValue[1] = height;
 	returnValue[2] = transparency;
-	for(j = height - 1; j >= 0; j--)
-		for(i = 0; i < width; i++)
-			returnValue[j * width + i + 3] = (PIXEL_TYPE)((fgetc(temp) >> 3) | ((fgetc(temp) >> 2) << 5) | ((fgetc(temp) >> 3) << 11));
+	for (j = height - 1; j >= 0; j--)
+	{
+		for (i = 0; i < width; i++)
+		{
+			uint8_t b = fgetc(temp), g = fgetc(temp), r = fgetc(temp);
+			returnValue[j * width + i + 3] = n2D_rgbToPixel(r, g, b);
+		}
+	}
 	
 	fclose(temp);
 

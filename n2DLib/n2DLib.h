@@ -2,8 +2,6 @@
 
 #include "n2DLib/n2DLib_types.h"
 
-// TODO : use sized types
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,49 +11,83 @@ typedef struct SDL_Texture SDL_Texture;
 
 #define MAX_TIMER 2
 
-void initBuffering();
-void constrainFrameRate(INT_TYPE);
-void displayFrameRate();
-void updateScreen();
-void updateKeys();
-BOOL_TYPE isKeyPressed(t_key _k);
-void deinitBuffering();
-void timer_load(ID_TYPE, UINT_TYPE);
-UINT_TYPE timer_read(ID_TYPE);
-void clearBufferB();
-void clearBufferW();
-void clearBuffer(PIXEL_TYPE);
-PIXEL_TYPE rgbToPixel(unsigned char r, unsigned char g, unsigned char b);
-PIXEL_TYPE getPixelUnsafe(const PIXEL_TYPE*, UINT_TYPE, UINT_TYPE);
-PIXEL_TYPE getPixel(const PIXEL_TYPE*, UINT_TYPE, UINT_TYPE);
-void setPixelUnsafe(UINT_TYPE, UINT_TYPE, PIXEL_TYPE);
-void setPixel(UINT_TYPE, UINT_TYPE, PIXEL_TYPE);
-void drawHLine(INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
-void drawVLine(INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
-void fillRect(INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
-void drawSprite(const PIXEL_TYPE*, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
-void drawSpritePart(const PIXEL_TYPE*, INT_TYPE, INT_TYPE, const Rect*, INT_TYPE, PIXEL_TYPE);
-void drawSpriteScaled(const PIXEL_TYPE*, const Rect*, INT_TYPE, PIXEL_TYPE);
-void drawSpriteRotated(const PIXEL_TYPE*, const Rect*, const Rect*, Fixed, INT_TYPE, PIXEL_TYPE);
-void drawLine(INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
-void drawPolygon(PIXEL_TYPE, INT_TYPE, ...);
-void fillCircle(INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
-void fillEllipse(INT_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, PIXEL_TYPE);
-void drawString(INT_TYPE*, INT_TYPE*, INT_TYPE, const char*, PIXEL_TYPE, PIXEL_TYPE);
-void drawDecimal(INT_TYPE*, INT_TYPE*, INT_TYPE, PIXEL_TYPE, PIXEL_TYPE);
-void drawChar(INT_TYPE*, INT_TYPE*, INT_TYPE, char, PIXEL_TYPE, PIXEL_TYPE);
-void drawStringF(INT_TYPE*, INT_TYPE*, INT_TYPE, PIXEL_TYPE, PIXEL_TYPE, const char*, ...);
-UINT_TYPE numberWidth(INT_TYPE);
-UINT_TYPE stringWidth(const char*);
-void wait_no_key_pressed(t_key);
-BOOL_TYPE get_key_pressed(t_key*);
-BOOL_TYPE isKey(t_key, t_key);
+// Initialize display and buffering.
+void n2D_init();
+// Clear and free resources.
+void n2D_deinit();
+// Limits the framerate to a fixed amount.
+void n2D_constrainFrameRate(INT_TYPE fps);
+// Displays the framerate at the bottom of the screen.
+void n2D_displayFrameRate();
+// Refreshes the screen with the buffer's contents.
+void n2D_updateScreen();
+// TODO : drop input support
+void n2D_updateKeys();
+BOOL_TYPE n2D_isKeyPressed(t_key k);
+void n2D_waitNoKeyPressed(t_key k);
+BOOL_TYPE n2D_getKeyPressed(t_key* outk);
+BOOL_TYPE n2D_areKeysSame(t_key k1, t_key k2);
+// TODO : drop timers support
+void n2D_timerLoad(ID_TYPE timerId, UINT_TYPE value);
+UINT_TYPE n2D_timerRead(ID_TYPE timerId);
+// Clear the buffer with black.
+void n2D_clearBufferB();
+// Clear the buffer with white.
+void n2D_clearBufferW();
+// Clear the buffer with a given color.
+void n2D_clearBuffer(PIXEL_TYPE color);
+// Convert an RGB triplet to the currently chosen pixel representation.
+PIXEL_TYPE n2D_rgbToPixel(uint8_t r, uint8_t g, uint8_t b);
+// Read a pixel from an image with no bounds-checking.
+PIXEL_TYPE n2D_getPixelUnsafe(const PIXEL_TYPE* src, UINT_TYPE x, UINT_TYPE y);
+// Read a pixel from an image with bounds-checking.
+PIXEL_TYPE n2D_getPixel(const PIXEL_TYPE* src, UINT_TYPE x, UINT_TYPE y);
+// Sets a pixel in the buffer with no bounds-checking.
+void n2D_setPixelUnsafe(UINT_TYPE x, UINT_TYPE y, PIXEL_TYPE color);
+// Sets a pixel in the buffer with bounds-checking.
+void n2D_setPixel(UINT_TYPE x, UINT_TYPE y, PIXEL_TYPE color);
+// Draw a horizontal line.
+void n2D_drawHLine(INT_TYPE y, INT_TYPE x1, INT_TYPE x2, PIXEL_TYPE color);
+// Draw a vertical line.
+void n2D_drawVLine(INT_TYPE x, INT_TYPE y1, INT_TYPE y2, PIXEL_TYPE color);
+// Fill a rectangle with a color given top-left corner position, width and height.
+void n2D_fillRect(INT_TYPE x, INT_TYPE y, INT_TYPE w, INT_TYPE h, PIXEL_TYPE color);
+// Draw a sprite, optionally flashing a color.
+void n2D_drawSprite(const PIXEL_TYPE* img, INT_TYPE x, INT_TYPE y, BOOL_TYPE flash, PIXEL_TYPE color);
+// Draw a part of a sprite, optionally flashing a color.
+void n2D_drawSpritePart(const PIXEL_TYPE* img, INT_TYPE x, INT_TYPE y, const Rect* part, BOOL_TYPE flash, PIXEL_TYPE color);
+// Draw a sprite to fill a destination rectangle, optionally flashing.
+void n2D_drawSpriteScaled(const PIXEL_TYPE* img, const Rect* destination, BOOL_TYPE flash, PIXEL_TYPE color);
+// Draw a sprite rotated around an optionally provided center point. Pass in NULL to compute the image's center.
+void n2D_drawSpriteRotated(const PIXEL_TYPE* img, const Rect* xy, const Rect* center, Fixed angle, BOOL_TYPE flash, PIXEL_TYPE color);
+// Draw an arbitrary line.
+void n2D_drawLine(INT_TYPE x1, INT_TYPE y1, INT_TYPE x2, INT_TYPE y2, PIXEL_TYPE color);
+// Link a polygon's vertices with lines. Points come in order of `INT_TYPE x, INT_TYPE y`.
+void n2D_drawPolygon(PIXEL_TYPE color, INT_TYPE nbPoints, ...);
+// Fill a circle with a color given its center coordinates and radius.
+void n2D_fillCircle(INT_TYPE x, INT_TYPE y, INT_TYPE radius, PIXEL_TYPE color);
+// Fill an ellipse with a color given its center coordinates and radii.
+void n2D_fillEllipse(INT_TYPE x, INT_TYPE y, INT_TYPE radiusW, INT_TYPE radiusH, PIXEL_TYPE);
+// Draw a string with foreground and outline colors, updating the position as it goes. Supports newlines
+// by resetting the x position to the provided margin value.
+void n2D_drawString(INT_TYPE* x, INT_TYPE* y, INT_TYPE margin, const char* str, PIXEL_TYPE textColor, PIXEL_TYPE outlineColor);
+// Same as `n2D_drawString` but draws a decimal number.
+void n2D_drawDecimal(INT_TYPE* x, INT_TYPE* y, INT_TYPE number, PIXEL_TYPE textColor, PIXEL_TYPE outlineColor);
+// Same as `n2D_drawString` but draws a single character.
+void n2D_drawChar(INT_TYPE* x, INT_TYPE* y, INT_TYPE margin, char ch, PIXEL_TYPE textColor, PIXEL_TYPE outlineColor);
+// Same as `n2D_drawString` but takes a format string and arguments.
+void n2D_drawStringF(INT_TYPE* x, INT_TYPE* y, INT_TYPE margin, PIXEL_TYPE textColor, PIXEL_TYPE outlineColor, const char* fstr, ...);
+// Returns the width of a number in pixels when drawn with the font currently in use.
+UINT_TYPE n2D_numberWidth(INT_TYPE number);
+// Returns the width of a string in pixels when drawn with the font currently in use.
+UINT_TYPE n2D_stringWidth(const char* str);
 
-PIXEL_TYPE* loadBMP(const char*, PIXEL_TYPE);
+// Loads a 24-bpp bitmap image into an n2DLib-compatible PIXEL_TYPE* array, using a color key
+// for transparency. Has to be freed when done using.
+PIXEL_TYPE* n2D_loadBMP(const char* path, PIXEL_TYPE colorKey);
 
 #define BUFF_BYTES_SIZE (320*240*2)
 extern PIXEL_TYPE* BUFF_BASE_ADDRESS;
-extern SDL_Texture* MAIN_SCREEN;
 
 #ifdef __cplusplus
 }

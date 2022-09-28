@@ -11,16 +11,20 @@ extern "C" {
 
 #if !defined(min) && !defined(max)
 
-int min(int a, int b);
-int max(int a, int b);
+// Compute the minimum of two values.
+INT_TYPE min(INT_TYPE a, INT_TYPE b);
+// Compute the maximum of two values.
+INT_TYPE max(INT_TYPE a, INT_TYPE b);
 
 #endif
 
-int clamp(int x, int a, int b);
-int sign(int x);
-int sq(int x);
-int cube(int x);
-unsigned int isqrt(unsigned int x);
+// Keep a value between two bounds.
+INT_TYPE clamp(INT_TYPE x, INT_TYPE a, INT_TYPE b);
+// 
+INT_TYPE sign(INT_TYPE x);
+INT_TYPE sq(INT_TYPE x);
+INT_TYPE cube(INT_TYPE x);
+UINT_TYPE isqrt(UINT_TYPE x);
 
 Fixed fixmul(Fixed x, Fixed y);
 Fixed fixdiv(Fixed x, Fixed y);
@@ -30,8 +34,8 @@ Fixed fixsq(Fixed x);
 Fixed fixcube(Fixed x);
 Fixed fixlerp(Fixed a, Fixed b, Fixed x);
 
-void rotate(int x, int y, int cx, int cy, Fixed angle, Rect* out);
-void getBoundingBox(int x, int y, int w, int h, int cx, int cy, Fixed angle, Rect* out);
+void rotate(INT_TYPE x, INT_TYPE y, INT_TYPE cx, INT_TYPE cy, Fixed angle, Rect* out);
+void getBoundingBox(INT_TYPE x, INT_TYPE y, INT_TYPE w, INT_TYPE h, INT_TYPE cx, INT_TYPE cy, Fixed angle, Rect* out);
 
 #ifdef __cplusplus
 }
