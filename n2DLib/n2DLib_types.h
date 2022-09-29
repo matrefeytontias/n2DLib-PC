@@ -22,9 +22,6 @@ typedef uint16_t PIXEL_TYPE;
 #error Please define a pixel type for the current PIXEL_TYPE_* constant.
 #endif
 
-// Single key presses
-typedef uint8_t t_key;
-
 #ifndef N2DLIB_FIXED_BITS
 // Define this on your own to control the format
 // of the fixed-point type.

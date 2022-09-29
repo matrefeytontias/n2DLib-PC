@@ -21,12 +21,6 @@ void n2D_constrainFrameRate(INT_TYPE fps);
 void n2D_displayFrameRate();
 // Refreshes the screen with the buffer's contents.
 void n2D_updateScreen();
-// TODO : drop input support
-void n2D_updateKeys();
-BOOL_TYPE n2D_isKeyPressed(t_key k);
-void n2D_waitNoKeyPressed(t_key k);
-BOOL_TYPE n2D_getKeyPressed(t_key* outk);
-BOOL_TYPE n2D_areKeysSame(t_key k1, t_key k2);
 // TODO : drop timers support
 void n2D_timerLoad(ID_TYPE timerId, UINT_TYPE value);
 UINT_TYPE n2D_timerRead(ID_TYPE timerId);

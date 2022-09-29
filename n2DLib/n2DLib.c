@@ -8,8 +8,6 @@
 #include "n2DLib_font.h"
 #include "n2DLib/n2DLib_math.h"
 
-static volatile const t_key* keysArray;
-
 /*             *
  *  Buffering  *
  *             */
@@ -50,7 +48,6 @@ void n2D_init()
 	memset(BUFF_BASE_ADDRESS, 0, sizeof(BUFF_BASE_ADDRESS));
 	
 	baseFPS = SDL_GetTicks();
-	keysArray = SDL_GetKeyboardState(NULL);
 }
 
 void n2D_deinit()
@@ -109,25 +106,8 @@ void n2D_updateScreen()
 		*(UINT_TYPE*)(pixels + di) = *(UINT_TYPE*)(buf + di);
 	SDL_UnlockTexture(MAIN_SCREEN);
 	
-	if(keysArray[SDL_SCANCODE_F])
-	{
-		if(!toggled)
-		{
-			toggled = 1;
-			toggleFullscreen(); // broken, bad SDL2 build ? 31/10/2016 : yes indeed, see n2D_init
-		}
-	}
-	else
-		toggled = 0;
-	
 	SDL_RenderCopy(sdlRenderer, MAIN_SCREEN, NULL, NULL);
 	SDL_RenderPresent(sdlRenderer);
-	n2D_updateKeys();
-}
-
-void n2D_updateKeys()
-{
-	SDL_PumpEvents();
 }
 
 /*        *
@@ -612,36 +592,6 @@ UINT_TYPE n2D_stringWidth(const char* s)
 /*               *
  * Miscellaneous *
  *               */
-
-BOOL_TYPE n2D_isKeyPressed(t_key _k)
-{
-	return keysArray[_k];
-}
-
-void n2D_waitNoKeyPressed(t_key k)
-{
-	while (keysArray[k])
-		SDL_PumpEvents();
-}
-
-BOOL_TYPE n2D_getKeyPressed(t_key* report)
-{
-	INT_TYPE i;
-	for(i = 0; i < SDL_NUM_SCANCODES; i++)
-	{
-		if (keysArray[i])
-		{
-			if(report != NULL) *report = i;
-			return 1;
-		}
-	}
-	return 0;
-}
-
-BOOL_TYPE n2D_areKeysSame(t_key k1, t_key k2)
-{
-	return k1 == k2;
-}
 
 PIXEL_TYPE *n2D_loadBMP(const char *path, PIXEL_TYPE transparency)
 {
