@@ -6,9 +6,6 @@
 extern "C" {
 #endif
 
-struct SDL_Texture;
-typedef struct SDL_Texture SDL_Texture;
-
 #define MAX_TIMER 2
 
 // Initialize display and buffering.
